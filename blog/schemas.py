@@ -47,4 +47,22 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: Optional[str] = None 
+    id: Optional[int] = None 
+    
+
+class CommentBase(BaseModel):
+    content: str
+
+class Comment(CommentBase):
+    class Config:
+        orm_mode = True
+
+class ShowComment(BaseModel):
+    id: int
+    content: str
+    author: ShowUser
+    class Config:
+        orm_mode = True
+
+# Обратите внимание на "ShowComment", которое используется в ShowBlog для отображения комментариев.
+    
