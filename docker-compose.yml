@@ -1,0 +1,35 @@
+version: '3.5'
+
+services:
+  blog:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: blog
+    image: blog
+    ports:
+      - 8000:8000
+    depends_on:
+      blog-postgres:
+        condition: service_healthy
+
+  blog-postgres:
+    container_name: blog-postgres
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - blog-pg-data:/var/lib/postgresql/data
+    image: postgres:15-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+volumes:
+  blog-pg-data: 
+    name: blog-pg-data
