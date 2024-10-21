@@ -1,4 +1,3 @@
-# routers/comment.py
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from .. import schemas, database, oauth2
@@ -24,4 +23,3 @@ def get_comments(blog_id: int, db: Session = Depends(get_db)):
 @router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_comment(comment_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     return comment.delete_comment(comment_id, current_user.id, db)
-
