@@ -6,11 +6,19 @@ def get_all_categories(db: Session):
     return db.query(models.Category).all()
 
 def create_category(request: schemas.Category, db: Session):
+    if not request.name:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category name is required.")
+
+    # Проверка на уникальность имени категории
+    if db.query(models.Category).filter(models.Category.name == request.name).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category already exists.")
+
     new_category = models.Category(name=request.name)
     db.add(new_category)
     db.commit()
     db.refresh(new_category)
     return new_category
+
 
 def get_blogs_by_category_name(category_name: str, db: Session):
     # Получаем категорию по названию

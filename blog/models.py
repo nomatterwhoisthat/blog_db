@@ -8,17 +8,22 @@ blog_category = Table('blog_category', Base.metadata,
     Column('category_id', Integer, ForeignKey('categories.id'))
 )
 
-# Модель для блога
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from .database import Base  # Убедитесь, что у вас есть правильный импорт для Base
+
 class Blog(Base):
     __tablename__ = 'blogs'
+    
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String)
-    body = Column(String)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    title = Column(String, nullable=False)  # Добавлено nullable=False для обязательного заголовка
+    body = Column(String, nullable=False)   # Добавлено nullable=False для обязательного тела блога
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # Добавлено nullable=False
 
     creator = relationship("User", back_populates="blogs")
     comments = relationship("Comment", back_populates="blog", cascade="all, delete")
-    categories = relationship("Category", secondary=blog_category, back_populates="blogs")
+    categories = relationship("Category", secondary='blog_category', back_populates="blogs")
+
 
 # Модель для пользователя
 class User(Base):
