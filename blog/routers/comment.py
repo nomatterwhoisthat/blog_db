@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
-from .. import schemas, database, oauth2
+from .. import schemas, database, oauth2, models
 from ..repository import comment
 from typing import List
-
+from ..rbac import check_admin
 
 router = APIRouter(
     prefix="/comment",
@@ -20,6 +20,16 @@ def create_comment(blog_id: int, request: schemas.Comment, db: Session = Depends
 def get_comments(blog_id: int, db: Session = Depends(get_db)):
     return comment.get_all_comments(blog_id, db)
 
+# @router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
+# def delete_comment(comment_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
+#     return comment.delete_comment(comment_id, current_user.id, db)
+
 @router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_comment(comment_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
+    c = db.query(models.Comment).filter(models.Comment.id == comment_id).first()
+
+    if c.user_id != current_user.id:
+        # Только администратор может удалить чужие комментарии
+        check_admin(current_user)
+
     return comment.delete_comment(comment_id, current_user.id, db)

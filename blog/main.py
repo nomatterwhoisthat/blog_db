@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from . import models
 from .database import engine
 from .routers import blog, user, authentication, comment, category
-from .rbac import RBACMiddleware
+
 app = FastAPI()
 
 # Добавьте вывод для проверки

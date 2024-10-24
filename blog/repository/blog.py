@@ -1,16 +1,12 @@
 from sqlalchemy.orm import Session
-from .. import schemas
-from .. import models
+from .. import models, schemas
 from fastapi import HTTPException, status
+from fastapi.responses import JSONResponse
 
 def get_all(db: Session):
     blogs = db.query(models.Blog).all()
     return blogs
 
-# from sqlalchemy.orm import Session
-# from fastapi import HTTPException, status
-# from typing import List
-# from . import models, schemas
 
 def create(request: schemas.BlogBase, db: Session, current_user: models.User):
     # Проверка на наличие заголовка и тела блога
@@ -63,15 +59,16 @@ def create(request: schemas.BlogBase, db: Session, current_user: models.User):
 
     return new_blog
 
-def destroy(id: int, db: Session):
-    blog = db.query(models.Blog).filter(models.Blog.id == id).first()
+def destroy(id: int, user_id: int, db: Session):
+    blog = db.query(models.Blog).filter(models.Blog.id == id, models.Blog.user_id == user_id ).first()
 
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found.")
 
     db.delete(blog)
     db.commit()
-    return 'Blog deleted successfully'
+    return JSONResponse(content={"detail": "Blog deleted successfully"}, status_code=status.HTTP_200_OK)
+
 
 
 
@@ -88,8 +85,8 @@ def update(id: int, request: schemas.BlogBase, db: Session):
     blog.title = request.title
     blog.body = request.body
     db.commit()
+    return JSONResponse(content={"detail": "Blog updated successfully"}, status_code=status.HTTP_200_OK)
 
-    return 'Blog updated successfully'
 
 
 def show(id: int, db: Session):

@@ -8,9 +8,6 @@ blog_category = Table('blog_category', Base.metadata,
     Column('category_id', Integer, ForeignKey('categories.id'))
 )
 
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
-from .database import Base  # Убедитесь, что у вас есть правильный импорт для Base
 
 class Blog(Base):
     __tablename__ = 'blogs'
@@ -33,10 +30,10 @@ class User(Base):
     name = Column(String)
     email = Column(String)
     password = Column(String)
+    role = Column(String, default="guest")  # Роль по умолчанию - гость
 
     blogs = relationship("Blog", back_populates="creator")
     comments = relationship("Comment", back_populates="author", cascade="all, delete")
-
 # Модель для комментария
 class Comment(Base):
     __tablename__ = 'comments'

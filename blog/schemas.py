@@ -25,15 +25,18 @@ class Blog(BlogBase):
     class Config:
         orm_mode = True                    
 
+# schemas.py
 class User(BaseModel):
-    name: str = Field(..., max_length=100, description="Имя пользователя (макс. 100 символов)")
-    email: str = Field(..., pattern=r'^\S+@\S+\.\S+$', description="Электронная почта пользователя (должна соответствовать формату email)")
-    password: str = Field(..., min_length=6, description="Пароль (мин. 6 символов)")
- 
+    name: str = Field(..., max_length=100)
+    email: str = Field(..., max_length=100)
+    password: str = Field(..., min_length=6)
+    role: Optional[str] = "guest"  # По умолчанию роль - гость
+
 class ShowUser(BaseModel):
     id: int
     name: str
     email: str
+    role: str  # Теперь схема отображает роль
     class Config:
         orm_mode = True
 
@@ -47,7 +50,7 @@ class ShowBlog(BaseModel):
         orm_mode = True
 
 class Login(BaseModel):
-    username: str
+    name: str
     password: str        
 
 class Token(BaseModel):
@@ -55,7 +58,7 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    id: Optional[int] = None 
+    id: int
 
 class CommentBase(BaseModel):
     content: str = Field(..., max_length=256, description="Содержимое комментария (минимум 1 символ)")

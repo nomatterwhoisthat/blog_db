@@ -1,10 +1,12 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from .. import models, schemas
+from fastapi.responses import JSONResponse
 
 def get_all_comments(blog_id: int, db: Session):
     comments = db.query(models.Comment).filter(models.Comment.blog_id == blog_id).all()
     return comments
+
 def create_comment(request: schemas.Comment, blog_id: int, user_id: int, db: Session):
     # Проверка на содержание комментария
     if not request.content:
@@ -24,4 +26,5 @@ def delete_comment(comment_id: int, user_id: int, db: Session):
 
     db.delete(comment)
     db.commit()
-    return {"message": "Comment deleted successfully"}
+    return JSONResponse(content={"detail": "Comment deleted successfully"}, status_code=status.HTTP_200_OK)
+
