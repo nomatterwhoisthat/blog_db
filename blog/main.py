@@ -8,6 +8,9 @@ from fastapi import HTTPException, status
 from fastapi.exceptions import RequestValidationError
 
 app = FastAPI()
+
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc: RequestValidationError):
     return JSONResponse(

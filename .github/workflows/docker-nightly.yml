@@ -1,0 +1,30 @@
+name: Publish docker nightly
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+    publish:
+        name: Publish images
+        runs-on: ubuntu-22.04
+
+        steps:
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v2
+
+          - uses: docker/login-action@v2
+            name: Login to DockerHub
+            with:
+              username: ${{ secrets.DOCKERHUB_USERNAME }}
+              password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+          - name: Build docker tag
+            run: echo "DOCKER_TAG=$(echo $(date '+%Y-%m-%d').${GITHUB_SHA:0:7})" >> $GITHUB_ENV
+
+          - name: Build and push
+            uses: docker/build-push-action@v4
+            with:
+              file: ./Dockerfile
+              push: true
+              tags: ${{ secrets.DOCKERHUB_USERNAME }}/blog-project-nightly:${{env.DOCKER_TAG}},${{ secrets.DOCKERHUB_USERNAME }}/blog-projec-nightly:latest

@@ -15,6 +15,9 @@ def create(request: schemas.BlogBase, db: Session, current_user: models.User):
     
     if not request.body:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Body is required.")
+    
+    if request.category_names and len(request.category_names) > 5:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A maximum of 5 categories is allowed.")
 
     # Если категории не указаны, создаем блог без категорий
     if not request.category_names or len(request.category_names) == 0:

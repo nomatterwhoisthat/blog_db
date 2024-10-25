@@ -5,7 +5,7 @@ from typing import List, Optional
 class BlogBase(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
     body: str = Field(..., min_length=1, max_length=20000, description="Тело блога (мин. 1 символ)")
-    category_names: Optional[List[str]] = Field(None, description="Список имен категорий (можно оставить пустым)")
+    category_names: Optional[List[str]] = Field(...,max_length=5, description="Список имен категорий (можно оставить пустым)")
 
 
 class CategoryBase(BaseModel):
