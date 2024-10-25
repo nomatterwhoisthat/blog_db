@@ -27,4 +27,4 @@ jobs:
             with:
               file: ./Dockerfile
               push: true
-              tags: ${{ secrets.DOCKERHUB_USERNAME }}/blog-project-nightly:${{env.DOCKER_TAG}},${{ secrets.DOCKERHUB_USERNAME }}/blog-projec-nightly:latest
+              tags: ${{ secrets.DOCKERHUB_USERNAME }}/blog-project-nightly:${{env.DOCKER_TAG}},${{ secrets.DOCKERHUB_USERNAME }}/blog-project-nightly:latest
