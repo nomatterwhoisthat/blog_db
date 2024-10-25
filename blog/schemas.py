@@ -4,7 +4,7 @@ from typing import List, Optional
 
 class BlogBase(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
-    body: str = Field(..., min_length=1, max_length=1000000, description="Тело блога (мин. 1 символ)")
+    body: str = Field(..., min_length=1, max_length=20000, description="Тело блога (мин. 1 символ)")
     category_names: Optional[List[str]] = Field(None, description="Список имен категорий (можно оставить пустым)")
 
 
@@ -27,16 +27,16 @@ class Blog(BlogBase):
 
 # schemas.py
 class User(BaseModel):
-    name: str = Field(..., max_length=100)
-    email: str = Field(..., max_length=100)
-    password: str = Field(..., min_length=6)
+    name: str = Field(..., max_length=100, description="Имя пользователя (макс. 100 символов)")
+    email: str = Field(..., pattern=r'^\S+@\S+\.\S+$', description="Электронная почта пользователя (должна соответствовать формату email)")
+    password: str = Field(..., min_length=6, description="Пароль (мин. 6 символов)")
     role: Optional[str] = "guest"  # По умолчанию роль - гость
 
 class ShowUser(BaseModel):
     id: int
     name: str
     email: str
-    role: str  # Теперь схема отображает роль
+    role: str  
     class Config:
         orm_mode = True
 

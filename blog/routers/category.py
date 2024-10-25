@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from .. import schemas, database, models
-from ..repository import category  # Убедитесь, что вы импортируете репозиторий категорий
+from ..repository import category 
 
 router = APIRouter(
     prefix="/category",

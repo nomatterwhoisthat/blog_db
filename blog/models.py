@@ -13,16 +13,15 @@ class Blog(Base):
     __tablename__ = 'blogs'
     
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)  # Добавлено nullable=False для обязательного заголовка
-    body = Column(String, nullable=False)   # Добавлено nullable=False для обязательного тела блога
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # Добавлено nullable=False
+    title = Column(String, nullable=False)  
+    body = Column(String, nullable=False)  
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False) 
 
     creator = relationship("User", back_populates="blogs")
     comments = relationship("Comment", back_populates="blog", cascade="all, delete")
     categories = relationship("Category", secondary='blog_category', back_populates="blogs")
 
 
-# Модель для пользователя
 class User(Base):
     __tablename__ = 'users'
 
@@ -34,7 +33,7 @@ class User(Base):
 
     blogs = relationship("Blog", back_populates="creator")
     comments = relationship("Comment", back_populates="author", cascade="all, delete")
-# Модель для комментария
+    
 class Comment(Base):
     __tablename__ = 'comments'
 
@@ -46,7 +45,6 @@ class Comment(Base):
     blog = relationship("Blog", back_populates="comments")
     author = relationship("User", back_populates="comments")
 
-# Модель для категории
 class Category(Base):
     __tablename__ = 'categories'
     id = Column(Integer, primary_key=True, index=True)

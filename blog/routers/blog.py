@@ -4,6 +4,7 @@ from .. import schemas, database, models, oauth2
 from sqlalchemy.orm import Session
 from ..repository import blog
 from ..rbac import check_admin
+
 router = APIRouter(
     prefix="/blog",
     tags=['Blogs']
