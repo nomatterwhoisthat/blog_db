@@ -68,7 +68,8 @@ Swagger-документация API проекта находится по пу
 
 # Схема баз данных
 
-![image](https://github.com/user-attachments/assets/0adcc087-da66-4140-a0c3-a91d286f0114)
+![image](https://github.com/user-attachments/assets/930de1e4-fc2f-4e7e-a0ee-8269e2229231)
+
 
 
 # Язык программировани
