@@ -67,7 +67,7 @@ Swagger-документация API проекта находится по пу
 * **Docker** - средство контейнеризации и развёртывания приложения
 
 # Схема баз данных
-![Описание картинки]("C:\Users\Nur\Pictures\schema.png")
+![Описание картинки]("(https://github.com/user-attachments/assets/1fac333b-37ef-43a4-bd07-77a8eea6534b)")
 
 
 
