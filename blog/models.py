@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime
+from sqlalchemy.sql import func
 from .database import Base
 from sqlalchemy.orm import relationship
 
@@ -20,6 +21,7 @@ class Blog(Base):
     creator = relationship("User", back_populates="blogs")
     comments = relationship("Comment", back_populates="blog", cascade="all, delete")
     categories = relationship("Category", secondary='blog_category', back_populates="blogs")
+
 
 
 class User(Base):

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-
+from datetime import datetime
 
 class BlogBase(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
@@ -73,3 +73,24 @@ class ShowComment(BaseModel):
     author: ShowUser
     class Config:
         orm_mode = True
+
+class ShowBlogWithCommentCount(BaseModel):
+    id: int
+    title: str
+    body: str
+    creator: ShowUser  
+    comment_count: int  
+    
+    class Config:
+        from_attributes = True 
+
+
+class ShowBlogWithLength(BaseModel):
+    id: int
+    title: str
+    body: str
+    creator: ShowUser  
+    length: int 
+    
+
+

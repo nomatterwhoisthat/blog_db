@@ -2,10 +2,59 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
-
+from sqlalchemy import func
+from typing import Optional, List
 def get_all(db: Session):
     blogs = db.query(models.Blog).all()
     return blogs
+
+def sort_blogs_by_length(db: Session, sort_order: Optional[str] = None) -> List[schemas.ShowBlogWithLength]:
+    if sort_order not in [None, "asc", "desc"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sort order. Use 'asc', 'desc', or omit it.")
+
+    if sort_order == "asc":
+        blogs = db.query(models.Blog).order_by(func.length(models.Blog.body)).all()
+    elif sort_order == "desc":
+        blogs = db.query(models.Blog).order_by(func.length(models.Blog.body).desc()).all()
+    else:
+        blogs = db.query(models.Blog).all()  
+    
+    # Формируем список результатов с длиной текста
+    result = []
+    for blog in blogs:
+        length = len(blog.body)  
+        result.append({
+            "id": blog.id,
+            "title": blog.title,
+            "body": blog.body,
+            "creator": blog.creator,
+            "length": length  
+        })
+
+    return result
+
+def blogs_sorted_by_comments(db: Session, sort_order: Optional[str] = None) -> List[schemas.ShowBlogWithCommentCount]:
+    # Запрос для получения блогов с подсчетом комментариев
+    if sort_order == "asc":
+        blogs = db.query(models.Blog).outerjoin(models.Comment).group_by(models.Blog.id).order_by(func.count(models.Comment.id).asc()).all()
+    elif sort_order == "desc":
+        blogs = db.query(models.Blog).outerjoin(models.Comment).group_by(models.Blog.id).order_by(func.count(models.Comment.id).desc()).all()
+    else:
+        blogs = db.query(models.Blog).outerjoin(models.Comment).group_by(models.Blog.id).all()
+
+    # Формируем список результатов
+    result = []
+    for blog in blogs:
+        comment_count = db.query(func.count(models.Comment.id)).filter(models.Comment.blog_id == blog.id).scalar()
+        result.append({
+            "id": blog.id,
+            "title": blog.title,
+            "body": blog.body,
+            "creator": blog.creator,
+            "comment_count": comment_count 
+        })
+
+    return result
 
 
 def create(request: schemas.BlogBase, db: Session, current_user: models.User):

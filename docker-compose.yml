@@ -12,6 +12,10 @@ services:
     depends_on:
       blog-postgres:
         condition: service_healthy
+    # command: >
+    #   /bin/sh -c "alembic upgrade head && alembic revision --autogenerate -m 'Initial migration' && uvicorn blog.main:app --host 0.0.0.0 --port 8000 --reload"
+    networks:
+      - blog-network
 
   blog-postgres:
     container_name: blog-postgres
@@ -29,7 +33,13 @@ services:
       interval: 1s
       timeout: 1s
       retries: 10
+    networks:
+      - blog-network
 
 volumes:
   blog-pg-data: 
     name: blog-pg-data
+
+networks:
+  blog-network:
+    driver: bridge

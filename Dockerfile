@@ -9,9 +9,12 @@ COPY requirements.txt .
 
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install alembic
 
 # Копируем всё содержимое директории в рабочую директорию контейнера
 COPY . .
+
+# RUN alembic upgrade head
 
 # Открываем порт 8000 для приложения
 EXPOSE 8000
