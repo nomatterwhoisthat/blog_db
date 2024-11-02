@@ -7,3 +7,8 @@ run-docker:
 stop-docker:
 	docker-compose down
 	docker rmi blog
+
+#export PYTHONPATH=$(pwd)
+tests:
+	export PYTHONPATH=.
+	pytest

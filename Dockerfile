@@ -10,7 +10,7 @@ COPY requirements.txt .
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install alembic
-
+#RUN pip install psycopg2-binary
 # Копируем всё содержимое директории в рабочую директорию контейнера
 COPY . .
 

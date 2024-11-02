@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..repository import blog
 from ..rbac import check_admin
 from typing import Optional
-from sqlalchemy import func
+
 router = APIRouter(
     prefix="/blog",
     tags=['Blogs']
