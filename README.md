@@ -89,7 +89,11 @@ Swagger-документация API проекта находится по пу
 
 # Тесты
 Тесты находятся в папке test и для запуска нужно:
-
+   ```bash
+   export PYTHONPATH=.
+   pytest
+   ```
+или:
    ```bash
    make tests
    ```
