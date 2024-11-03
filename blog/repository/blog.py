@@ -55,7 +55,55 @@ def blogs_sorted_by_comments(db: Session, sort_order: Optional[str] = None) -> L
         })
 
     return result
+def blogs_sorted_by_moderated_comments(db: Session, sort_order: Optional[str] = None) -> List[schemas.ShowBlogWithCommentCount]:
+    # Запрос для получения блогов с подсчетом только проверенных комментариев
+    comment_count_query = func.coalesce(func.count(models.Comment.id), 0)  # Устанавливаем 0, если нет проверенных комментариев
+    
+    if sort_order == "asc":
+        blogs = (
+            db.query(
+                models.Blog,
+                comment_count_query.label("comment_count")
+            )
+            .outerjoin(models.Comment, (models.Blog.id == models.Comment.blog_id) & (models.Comment.is_moderated == True))  # Только проверенные комментарии
+            .group_by(models.Blog.id)
+            .order_by(comment_count_query.asc())
+            .all()
+        )
+    elif sort_order == "desc":
+        blogs = (
+            db.query(
+                models.Blog,
+                comment_count_query.label("comment_count")
+            )
+            .outerjoin(models.Comment, (models.Blog.id == models.Comment.blog_id) & (models.Comment.is_moderated == True))
+            .group_by(models.Blog.id)
+            .order_by(comment_count_query.desc())
+            .all()
+        )
+    else:
+        blogs = (
+            db.query(
+                models.Blog,
+                comment_count_query.label("comment_count")
+            )
+            .outerjoin(models.Comment, (models.Blog.id == models.Comment.blog_id) & (models.Comment.is_moderated == True))
+            .group_by(models.Blog.id)
+            .all()
+        )
 
+    # Формируем список результатов
+    result = []
+    for blog, comment_count in blogs:
+        result.append({
+            "id": blog.id,
+            "title": blog.title,
+            "body": blog.body,
+            "creator": blog.creator,
+            "comment_count": comment_count
+        })
+
+    return result
 
 def create(request: schemas.BlogBase, db: Session, current_user: models.User):
     # Проверка на наличие заголовка и тела блога

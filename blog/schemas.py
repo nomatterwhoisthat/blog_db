@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
@@ -25,7 +25,7 @@ class Blog(BlogBase):
     class Config:
         orm_mode = True                    
 
-# schemas.py
+
 class User(BaseModel):
     name: str = Field(..., max_length=100, description="Имя пользователя (макс. 100 символов)")
     email: str = Field(..., pattern=r'^\S+@\S+\.\S+$', description="Электронная почта пользователя (должна соответствовать формату email)")
@@ -71,8 +71,18 @@ class ShowComment(BaseModel):
     id: int
     content: str
     author: ShowUser
+    is_moderated: Optional[bool] = None
     class Config:
         orm_mode = True
+
+class ShowCommentForUsers(BaseModel):
+    id: int
+    content: str
+    author: ShowUser
+    
+    class Config:
+        orm_mode = True
+
 
 class ShowBlogWithCommentCount(BaseModel):
     id: int

@@ -63,7 +63,7 @@ class TestCommentFunctions(TestCase):
         db.query(models.Comment).filter.return_value.first.return_value = comment
         
         # Вызываем функцию и проверяем, что комментарий был удалён
-        response = delete_comment(comment_id=1, user_id=1, db=db)
+        response = delete_comment(comment_id=1, db=db)  # Убираем user_id
         db.delete.assert_called_once_with(comment)
         db.commit.assert_called_once()
         
@@ -72,15 +72,14 @@ class TestCommentFunctions(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response_content, {"detail": "Comment deleted successfully"})
 
-
-    # Тест ошибки при попытке удаления несуществующего или чужого комментария
-    def test_delete_comment_not_found_or_unauthorized(self):
+    # Тест ошибки при попытке удаления несуществующего комментария
+    def test_delete_comment_not_found(self):
         db = Mock(spec=Session)
         
         # Комментарий не найден
         db.query(models.Comment).filter.return_value.first.return_value = None
         with self.assertRaises(HTTPException) as context:
-            delete_comment(comment_id=1, user_id=1, db=db)
+            delete_comment(comment_id=1, db=db)  # Убираем user_id
         
         self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(context.exception.detail, "Comment not found or not authorized.")
+        self.assertEqual(context.exception.detail, "Comment not found.")

@@ -24,7 +24,11 @@ def get_sorted_blogs(sort_order: Optional[str] = None, db: Session = Depends(get
 
 @router.get("/blogs/sorted_by_comments_number", response_model=List[schemas.ShowBlogWithCommentCount])
 def sort_by_comments(sort_order: Optional[str] = None,db: Session = Depends(get_db),current_user: schemas.User = Depends(oauth2.get_current_user)):
-    return blog.blogs_sorted_by_comments(db, sort_order)
+    if current_user.role == "moderator" or current_user.role == "admin" :  
+        return blog.blogs_sorted_by_comments(db, sort_order)
+    else:
+        return  blog.blogs_sorted_by_moderated_comments(db, sort_order)
+        
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowBlog)
 def create(request: schemas.BlogBase, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
@@ -34,9 +38,14 @@ def create(request: schemas.BlogBase, db: Session = Depends(get_db), current_use
 def destroy(id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     
     b = db.query(models.Blog).filter(models.Blog.id == id).first()
+    
+    if not b:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Blog not found.")
+    
     if b.user_id != current_user.id:
         # Только администратор может удалить чужие комментарии
         check_admin(current_user)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this blog.")
     return blog.destroy(id, current_user.id, db)    
     
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean
 from sqlalchemy.sql import func
 from .database import Base
 from sqlalchemy.orm import relationship
@@ -43,7 +43,7 @@ class Comment(Base):
     content = Column(String)
     blog_id = Column(Integer, ForeignKey('blogs.id'))
     user_id = Column(Integer, ForeignKey('users.id'))
-
+    is_moderated = Column(Boolean, default=False)
     blog = relationship("Blog", back_populates="comments")
     author = relationship("User", back_populates="comments")
 
