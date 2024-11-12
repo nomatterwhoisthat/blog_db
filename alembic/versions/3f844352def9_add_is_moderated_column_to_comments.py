@@ -26,3 +26,10 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Remove the is_moderated column from the comments table
     op.drop_column('comments', 'is_moderated')
+
+def upgrade():
+    op.add_column('comments', sa.Column('parent_id', sa.Integer(), nullable=True))
+    op.create_foreign_key(None, 'comments', 'comments', ['parent_id'], ['id'])
+
+def downgrade():
+    op.drop_column('comments', 'parent_id')

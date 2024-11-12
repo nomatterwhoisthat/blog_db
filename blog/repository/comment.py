@@ -27,7 +27,7 @@ def get_moderated_comments(blog_id: int, db: Session) -> List[schemas.ShowCommen
     comments = db.query(models.Comment).filter(models.Comment.blog_id == blog_id, models.Comment.is_moderated == True).all()
     return comments
 
-def create_comment(request: schemas.Comment, blog_id: int, user_id: int, db: Session):
+def create_comment(request: schemas.Comment, blog_id: int, user_id: int, parent_comment: str, db: Session):
     blog = db.query(models.Blog).filter(models.Blog.id == blog_id).first()
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Blog not found.")
@@ -36,8 +36,12 @@ def create_comment(request: schemas.Comment, blog_id: int, user_id: int, db: Ses
   
     if not request.content:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment content is required.")
-
-    new_comment = models.Comment(content=request.content, blog_id=blog_id, user_id=user_id)
+    new_comment = models.Comment(
+        content=request.content,
+        blog_id=blog_id,
+        user_id=user_id,
+        parent_id=parent_comment.id if parent_comment else None  # Связь с родительским комментарием
+    )
     db.add(new_comment)
     db.commit()
     db.refresh(new_comment)

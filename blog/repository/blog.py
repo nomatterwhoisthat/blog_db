@@ -4,6 +4,13 @@ from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import func
 from typing import Optional, List
+
+def get_user_gallery(db: Session, user_id: int) -> List[schemas.ShowPhoto]:
+    photos = db.query(models.Photo).filter(models.Photo.user_id == user_id).all()
+    if not photos:
+        raise HTTPException(status_code=404, detail="No photos found for the user.")
+    return photos
+
 def get_all(db: Session):
     blogs = db.query(models.Blog).all()
     return blogs
@@ -105,7 +112,7 @@ def blogs_sorted_by_moderated_comments(db: Session, sort_order: Optional[str] = 
 
     return result
 
-def create(request: schemas.BlogBase, db: Session, current_user: models.User):
+def create(request: schemas.BlogBase2,db: Session,current_user: models.User,photo_id: int = None):
     # Проверка на наличие заголовка и тела блога
     if not request.title:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title is required.")
@@ -116,13 +123,22 @@ def create(request: schemas.BlogBase, db: Session, current_user: models.User):
     if request.category_names and len(request.category_names) > 5:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A maximum of 5 categories is allowed.")
 
+    # Если photo_id указан, проверяем существование фотографии и её принадлежность пользователю
+    photo = None
+    if photo_id:
+        photo = db.query(models.Photo).filter(models.Photo.id == photo_id,models.Photo.user_id == current_user.id).first()
+        
+        if not photo:
+            raise HTTPException(status_code=404, detail="Photo not found or you don't have permission. You can only attach your own photos.")
+
     # Если категории не указаны, создаем блог без категорий
     if not request.category_names or len(request.category_names) == 0:
         new_blog = models.Blog(
             title=request.title, 
             body=request.body, 
             user_id=current_user.id,
-            categories=None  # Указываем None, если не требуется связывать с категориями
+            categories=None,  # Указываем None, если не требуется связывать с категориями
+            photo_id=photo.id if photo else None  # Привязываем фото, если оно указано
         )
         db.add(new_blog)
         db.commit()
@@ -137,7 +153,7 @@ def create(request: schemas.BlogBase, db: Session, current_user: models.User):
     new_category_names = set(request.category_names) - existing_category_names
 
     # Создание новых категорий
-    if new_category_names:  # Проверяем, есть ли новые категории для создания
+    if new_category_names:
         new_categories = [models.Category(name=name) for name in new_category_names]
         db.add_all(new_categories)
         db.commit()
@@ -145,12 +161,13 @@ def create(request: schemas.BlogBase, db: Session, current_user: models.User):
     # Получаем все категории (существующие + новые)
     all_categories = existing_categories + db.query(models.Category).filter(models.Category.name.in_(new_category_names)).all()
 
-    # Создание нового блога с категориями
+    # Создание нового блога с категориями и фото
     new_blog = models.Blog(
         title=request.title, 
         body=request.body, 
         user_id=current_user.id,  
-        categories=all_categories if all_categories else None  # Устанавливаем None, если категорий нет
+        categories=all_categories if all_categories else None,
+        photo_id=photo.id if photo else None  # Привязываем фото, если оно указано
     )
 
     db.add(new_blog)
@@ -158,6 +175,8 @@ def create(request: schemas.BlogBase, db: Session, current_user: models.User):
     db.refresh(new_blog)
 
     return new_blog
+
+   
 
 def destroy(id: int, user_id: int, db: Session):
     blog = db.query(models.Blog).filter(models.Blog.id == id, models.Blog.user_id == user_id ).first()
@@ -169,28 +188,65 @@ def destroy(id: int, user_id: int, db: Session):
     db.commit()
     return JSONResponse(content={"detail": "Blog deleted successfully"}, status_code=status.HTTP_200_OK)
 
-
-
-
-def update(id: int, request: schemas.BlogBase, db: Session):
+def update(id: int, request: schemas.BlogBase, db: Session, current_user: models.User):
+    # Поиск блога по ID
     blog = db.query(models.Blog).filter(models.Blog.id == id).first()
 
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found.")
 
+    # Проверка, что текущий пользователь является автором блога
+    if blog.creator != current_user.id:  # Проверяем, что id создателя блога совпадает с id текущего пользователя
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to update this blog.")
+
     # Проверка на наличие заголовка и тела блога
     if not request.title or not request.body:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title and body are required.")
 
+    # Обновляем заголовок и тело блога
     blog.title = request.title
     blog.body = request.body
+
+    if request.photo_id != 0:
+        # Поиск фото по ID
+        photo = db.query(models.Photo).filter(models.Photo.id == request.photo_id).first()
+
+        if not photo:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Photo with id {request.photo_id} not found.")
+
+        # Проверяем, принадлежит ли фото текущему пользователю
+        if photo.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to attach this photo.")
+
+        # Обновляем фотографию, ассоциированную с блогом
+        blog.photo = photo  # Связываем блог с новым фото
+        blog.photo_id = request.photo_id
+    
+    # Обновляем категорию по названию, если указано category_names
+    if request.category_names:
+        # Если category_names - строка, преобразуем её в список
+        if isinstance(request.category_names, str):
+            request.category_names = [request.category_names]
+
+        # Ищем категории по названиям
+        categories = db.query(models.Category).filter(models.Category.name.in_(request.category_names)).all()
+
+        if not categories:
+            # Если категории не существуют, создаем новые
+            categories = [models.Category(name=name) for name in request.category_names]
+            db.add_all(categories)
+            db.commit()
+
+        # Привязываем блог к найденным или новым категориям
+        blog.categories = categories  # Предположим, что у блога может быть несколько категорий
+        blog.category_ids = [category.id for category in categories]
+
     db.commit()
     return JSONResponse(content={"detail": "Blog updated successfully"}, status_code=status.HTTP_200_OK)
-
 
 
 def show(id: int, db: Session):
     blog = db.query(models.Blog).filter(models.Blog.id == id).first()
     if not blog:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with the id {id} is not available")
+        raise HTTPException(status_code=404, detail="Blog not found")
     return blog

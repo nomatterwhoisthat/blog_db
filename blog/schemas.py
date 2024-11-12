@@ -6,6 +6,13 @@ class BlogBase(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
     body: str = Field(..., min_length=1, max_length=20000, description="Тело блога (мин. 1 символ)")
     category_names: Optional[List[str]] = Field(...,max_length=5, description="Список имен категорий (можно оставить пустым)")
+    photo_id: Optional[int] = Field(..., description="Идентификатор фотографии")
+
+class BlogBase2(BaseModel):
+    title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
+    body: str = Field(..., min_length=1, max_length=20000, description="Тело блога (мин. 1 символ)")
+    category_names: Optional[List[str]] = Field(...,max_length=5, description="Список имен категорий (можно оставить пустым)")
+    
 
 
 class CategoryBase(BaseModel):
@@ -39,13 +46,20 @@ class ShowUser(BaseModel):
     role: str  
     class Config:
         orm_mode = True
+        
+class PhotoBase(BaseModel):
+    filename: str
 
+class ShowPhoto(PhotoBase):
+    id: int
+    
 class ShowBlog(BaseModel):
     id: int
     title: str
     body: str
     creator: ShowUser
     categories: List[ShowCategory]
+    photo: Optional[ShowPhoto] = None 
     class Config:
         orm_mode = True
 
@@ -62,6 +76,8 @@ class TokenData(BaseModel):
 
 class CommentBase(BaseModel):
     content: str = Field(..., max_length=256, description="Содержимое комментария (минимум 1 символ)")
+    parent_id: Optional[int] = None  # ID родительского комментария (если есть)
+
 
 class Comment(CommentBase):
     class Config:
@@ -72,6 +88,9 @@ class ShowComment(BaseModel):
     content: str
     author: ShowUser
     is_moderated: Optional[bool] = None
+    parent_id: Optional[int] = None  # ID родительского комментария
+    replies: List["ShowComment"] = []  # Ответы на комментарий
+
     class Config:
         orm_mode = True
 
@@ -102,5 +121,4 @@ class ShowBlogWithLength(BaseModel):
     creator: ShowUser  
     length: int 
     
-
 
