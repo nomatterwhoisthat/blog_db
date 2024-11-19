@@ -46,12 +46,13 @@ def show(id: int, db: Session):
 
 
 def destroy_user(user_id: int, cur_user_id: int, db: Session):
-    user = db.query(models.User).filter(models.User.id == user_id ).first()
-
-    if not user:
+    u = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    # Если пользователь не найден
+    if not u:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
-    db.delete(user)
+    db.delete(u)
     db.commit()
     return JSONResponse(content={"detail": "Blog deleted successfully."}, status_code=status.HTTP_200_OK)
 

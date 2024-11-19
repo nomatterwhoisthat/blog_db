@@ -54,18 +54,23 @@ def delete_comment(
     # Удаляем комментарий
     return comment.delete_comment(comment_id, db)
     
-
 @router.put('/{comment_id}/moderate', status_code=status.HTTP_200_OK)
 def moderate_comment(comment_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
-    check_moderator(current_user)  # Проверка на наличие роли модератора
+    # Проверяем, является ли пользователь модератором или администратором
+    if current_user.role not in ["moderator", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to moderate comments."
+        )
+    
     comment = db.query(models.Comment).filter(models.Comment.id == comment_id).first()
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found.")
 
+    # Модерируем комментарий
     comment.is_moderated = True
     db.commit()
     return {"detail": "Comment moderated successfully."}
-
 # @router.get('/{blog_id}', status_code=status.HTTP_200_OK, response_model=List[schemas.ShowComment])
 # def get_comments(blog_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)  # Зависимость для получения текущего пользователя
 # ):
@@ -76,7 +81,13 @@ def moderate_comment(comment_id: int, db: Session = Depends(get_db), current_use
 #        return comment.get_moderated_comments(blog_id, db)
 @router.get('/{blog_id}', status_code=status.HTTP_200_OK, response_model=List[schemas.ShowComment])
 def get_comments(blog_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
-   
+    blog = db.query(models.Blog).filter(models.Blog.id == blog_id).first()
+    if not blog:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blog with id {blog_id} not found."
+        )
+    
     # Получаем все комментарии для блога
     comments = db.query(models.Comment).filter(models.Comment.blog_id == blog_id).all()
 

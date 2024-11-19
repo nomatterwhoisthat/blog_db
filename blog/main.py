@@ -24,7 +24,20 @@ async def validation_exception_handler(request, exc: RequestValidationError):
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": [error['msg'] for error in exc.errors()]},
     )
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(request: Request, exc: RequestValidationError):
+#     errors = []
+#     for error in exc.errors():
+#         # Проверяем, связано ли сообщение с ошибкой формата email
+#         if error['loc'][-1] == "email" and error['type'] == "string_pattern_mismatch":
+#             errors.append("Email address is not valid")
+#         else:
+#             errors.append(error['msg'])
 
+#     return JSONResponse(
+#         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+#         content={"detail": errors},
+#     )
 #print("Создание таблиц в базе данных...")
 models.Base.metadata.create_all(engine)
 #print("Таблицы созданы успешно!")

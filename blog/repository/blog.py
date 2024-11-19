@@ -65,6 +65,8 @@ def blogs_sorted_by_comments(db: Session, sort_order: Optional[str] = None) -> L
 def blogs_sorted_by_moderated_comments(db: Session, sort_order: Optional[str] = None) -> List[schemas.ShowBlogWithCommentCount]:
     # Запрос для получения блогов с подсчетом только проверенных комментариев
     comment_count_query = func.coalesce(func.count(models.Comment.id), 0)  # Устанавливаем 0, если нет проверенных комментариев
+    if sort_order not in [None, "asc", "desc"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sort order. Use 'asc', 'desc', or omit it.")
     
     if sort_order == "asc":
         blogs = (
@@ -177,16 +179,19 @@ def create(request: schemas.BlogBase2,db: Session,current_user: models.User,phot
     return new_blog
 
    
+def destroy(id: int, db: Session):
+    # Ищем блог по ID, без проверки user_id
+    blog = db.query(models.Blog).filter(models.Blog.id == id).first()
 
-def destroy(id: int, user_id: int, db: Session):
-    blog = db.query(models.Blog).filter(models.Blog.id == id, models.Blog.user_id == user_id ).first()
-
+    # Проверяем, существует ли блог
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found.")
 
+    # Удаляем блог
     db.delete(blog)
     db.commit()
     return JSONResponse(content={"detail": "Blog deleted successfully"}, status_code=status.HTTP_200_OK)
+
 
 def update(id: int, request: schemas.BlogBase, db: Session, current_user: models.User):
     # Поиск блога по ID
@@ -196,7 +201,7 @@ def update(id: int, request: schemas.BlogBase, db: Session, current_user: models
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found.")
 
     # Проверка, что текущий пользователь является автором блога
-    if blog.creator != current_user.id:  # Проверяем, что id создателя блога совпадает с id текущего пользователя
+    if blog.user_id != current_user.id:  # Сравниваем поле user_id с текущим пользователем
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to update this blog.")
 
     # Проверка на наличие заголовка и тела блога

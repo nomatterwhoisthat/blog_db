@@ -9,6 +9,7 @@ def check_role(user: User, required_role: str):
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Insufficient permissions, must be {required_role}"
         )
+    return True
 
 def check_admin(user: User):
     check_role(user, "admin")

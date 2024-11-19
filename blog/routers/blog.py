@@ -19,7 +19,6 @@ import uuid
 import logging
 
 IMAGEDIR = os.path.join(os.path.dirname(__file__), "images")
-router = APIRouter()
 
 @router.post("/upload-photo/", response_model=schemas.ShowPhoto)
 def upload_photo(
@@ -28,8 +27,13 @@ def upload_photo(
     current_user: schemas.User = Depends(oauth2.get_current_user)
 ):
     try:
-        
-        file.filename = f"{uuid.uuid4()}.jpg"
+        allowed_extensions = ["jpg", "jpeg", "png"]
+        file_extension = file.filename.split(".")[-1].lower()
+        if file_extension not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="Only .png and .jpg files are allowed.")
+
+        # Генерация нового имени файла
+        file.filename = f"{uuid.uuid4()}.{file_extension}"
         contents = file.file.read()  # Синхронное чтение файла
         
         # Проверка и создание директории, если её нет
@@ -56,6 +60,16 @@ def upload_photo(
     except Exception as e:
         logging.error(f"Failed to upload photo: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while uploading the photo.")
+
+@router.get("/photos/", response_model=List[schemas.ShowPhoto])
+def get_user_photos( db: Session = Depends(get_db),current_user: schemas.User = Depends(oauth2.get_current_user)):
+    # Получаем все фото текущего пользователя из базы данных
+    photos = db.query(models.Photo).filter(models.Photo.user_id == current_user.id).all()
+    
+    if not photos:
+        raise HTTPException(status_code=404, detail="No photos found for the current user.")
+    
+    return photos
 
 @router.get("/gallery/{photo_id}")
 def get_photo_by_id(photo_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
@@ -90,6 +104,9 @@ def attach_photo_to_blog(blog_id: int, photo_id: int, db: Session = Depends(data
     blog = db.query(models.Blog).filter(models.Blog.id == blog_id, models.Blog.user_id == current_user.id).first()
     if not blog:
         raise HTTPException(status_code=404, detail="Blog not found or you don't have permission to attach a photo.")
+    
+    if blog.photo_id is not None:
+        raise HTTPException(status_code=400, detail="A photo is already attached to this blog. Cannot attach another photo.")
 
     # Проверка принадлежности фотографии
     photo = db.query(models.Photo).filter(models.Photo.id == photo_id, models.Photo.user_id == current_user.id).first()
@@ -157,16 +174,19 @@ def update_blog(id: int, request: schemas.BlogBase, db: Session = Depends(databa
 @router.delete("/blog/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def destroy(id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     
+    # Ищем блог по ID
     b = db.query(models.Blog).filter(models.Blog.id == id).first()
     
+    # Проверяем, существует ли блог
     if not b:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Blog not found.")
     
-    if b.user_id != current_user.id:
-        # Только администратор может удалить чужие комментарии
-        check_admin(current_user)
+    # Проверяем, является ли пользователь владельцем блога или администратором
+    if b.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this blog.")
-    return blog.destroy(id, current_user.id, db)    
+    
+    # Удаляем блог, передавая только ID блога
+    return blog.destroy(id, db)
     
 
 

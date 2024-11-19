@@ -28,8 +28,15 @@ def get_user(id: int,  db: Session = Depends(get_db)):
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
+    # Проверка, если текущий пользователь не найден
     u = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    # Если пользователь не найден
+    if not u:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    
+    # Проверка прав доступа: текущий пользователь должен быть администратором или удалять только себя
     if u.id != current_user.id:
-        # Только администратор может удалить чужие комментарии
         check_admin(current_user)
+    
     return user.destroy_user(user_id, current_user.id, db)
