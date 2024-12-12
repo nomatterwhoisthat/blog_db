@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field,  validator, ValidationError
 from typing import List, Optional
-from datetime import datetime
-import re
+
 class BlogBase(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
     body: str = Field(..., min_length=1, max_length=20000, description="Тело блога (мин. 1 символ)")
@@ -124,4 +123,3 @@ class ShowBlogWithLength(BaseModel):
     creator: ShowUser  
     length: int 
     
-

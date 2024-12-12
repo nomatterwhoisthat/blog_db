@@ -114,7 +114,7 @@ def blogs_sorted_by_moderated_comments(db: Session, sort_order: Optional[str] = 
 
     return result
 
-def create(request: schemas.BlogBase2,db: Session,current_user: models.User,photo_id: int = None):
+def create(request: schemas.BlogBase2, db: Session, current_user: models.User, photo_id: int = None):
     # Проверка на наличие заголовка и тела блога
     if not request.title:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title is required.")
@@ -128,8 +128,7 @@ def create(request: schemas.BlogBase2,db: Session,current_user: models.User,phot
     # Если photo_id указан, проверяем существование фотографии и её принадлежность пользователю
     photo = None
     if photo_id:
-        photo = db.query(models.Photo).filter(models.Photo.id == photo_id,models.Photo.user_id == current_user.id).first()
-        
+        photo = db.query(models.Photo).filter(models.Photo.id == photo_id, models.Photo.user_id == current_user.id).first()
         if not photo:
             raise HTTPException(status_code=404, detail="Photo not found or you don't have permission. You can only attach your own photos.")
 
@@ -139,7 +138,7 @@ def create(request: schemas.BlogBase2,db: Session,current_user: models.User,phot
             title=request.title, 
             body=request.body, 
             user_id=current_user.id,
-            categories=None,  # Указываем None, если не требуется связывать с категориями
+            categories=[],  # Пустой список вместо None
             photo_id=photo.id if photo else None  # Привязываем фото, если оно указано
         )
         db.add(new_blog)
@@ -168,7 +167,7 @@ def create(request: schemas.BlogBase2,db: Session,current_user: models.User,phot
         title=request.title, 
         body=request.body, 
         user_id=current_user.id,  
-        categories=all_categories if all_categories else None,
+        categories=all_categories,  # Список категорий
         photo_id=photo.id if photo else None  # Привязываем фото, если оно указано
     )
 
@@ -177,6 +176,7 @@ def create(request: schemas.BlogBase2,db: Session,current_user: models.User,phot
     db.refresh(new_blog)
 
     return new_blog
+
 
    
 def destroy(id: int, db: Session):

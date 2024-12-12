@@ -160,7 +160,7 @@ def sort_by_comments(sort_order: Optional[str] = None,db: Session = Depends(get_
         return blog.blogs_sorted_by_comments(db, sort_order)
     else:
         return  blog.blogs_sorted_by_moderated_comments(db, sort_order)
-  
+    
 @router.put("/blogs/{id}")
 def update_blog(id: int, request: schemas.BlogBase, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     return blog.update(id, request, db, current_user)    
@@ -182,5 +182,7 @@ def destroy(id: int, db: Session = Depends(get_db), current_user: schemas.User =
     # Удаляем блог, передавая только ID блога
     return blog.destroy(id, db)
     
+
+
 
 
