@@ -18,9 +18,9 @@ def create_comment(request: schemas.Comment, blog_id: int, user_id: int, parent_
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Blog not found.")
     
     # Проверяем, указан ли текст комментария
-  
     if not request.content:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment content is required.")
+    
     new_comment = models.Comment(
         content=request.content,
         blog_id=blog_id,
@@ -31,16 +31,6 @@ def create_comment(request: schemas.Comment, blog_id: int, user_id: int, parent_
     db.commit()
     db.refresh(new_comment)
     return new_comment
-
-# def delete_comment(comment_id: int, user_id: int, db: Session):
-#     comment = db.query(models.Comment).filter(models.Comment.id == comment_id, models.Comment.user_id == user_id).first()
-
-#     if not comment:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found or not authorized.")
-
-#     db.delete(comment)
-#     db.commit()
-#     return JSONResponse(content={"detail": "Comment deleted successfully"}, status_code=status.HTTP_200_OK)
 
 def delete_comment(comment_id: int, db: Session):
     comment_to_delete = db.query(models.Comment).filter(models.Comment.id == comment_id).first()

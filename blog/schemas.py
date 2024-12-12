@@ -1,19 +1,18 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field,  validator, ValidationError
 from typing import List, Optional
 from datetime import datetime
-
+import re
 class BlogBase(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
     body: str = Field(..., min_length=1, max_length=20000, description="Тело блога (мин. 1 символ)")
-    category_names: Optional[List[str]] = Field(...,max_length=5, description="Список имен категорий (можно оставить пустым)")
-    photo_id: Optional[int] = Field(..., description="Идентификатор фотографии")
+    category_names: Optional[List[str]] = Field([], max_length=5, description="Список имен категорий (можно оставить пустым)")
+    photo_id: Optional[int] = Field(None, description="Идентификатор фотографии (необязательное поле)")
 
 class BlogBase2(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")
     body: str = Field(..., min_length=1, max_length=20000, description="Тело блога (мин. 1 символ)")
     category_names: Optional[List[str]] = Field(...,max_length=5, description="Список имен категорий (можно оставить пустым)")
     
-
 
 class CategoryBase(BaseModel):
     name: str = Field(..., max_length=100, description="Название категории (макс. 100 символов)")
@@ -39,6 +38,7 @@ class User(BaseModel):
     password: str = Field(..., min_length=6, description="Пароль (мин. 6 символов)")
     role: Optional[str] = "guest"  # По умолчанию роль - гость
 
+    
 class ShowUser(BaseModel):
     id: int
     name: str
@@ -86,6 +86,7 @@ class Comment(CommentBase):
 
 class ShowComment(BaseModel):
     id: int
+    blog_id: int
     content: str
     author: ShowUser
     is_moderated: Optional[bool] = None
@@ -94,6 +95,7 @@ class ShowComment(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class ShowCommentForUsers(BaseModel):
     id: int

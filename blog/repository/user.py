@@ -55,4 +55,3 @@ def destroy_user(user_id: int, cur_user_id: int, db: Session):
     db.delete(u)
     db.commit()
     return JSONResponse(content={"detail": "Blog deleted successfully."}, status_code=status.HTTP_200_OK)
-

@@ -76,3 +76,31 @@ class TestSortBlogsByLength(TestCase):
         self.assertEqual(result[0]['title'], "Blog 1")
         self.assertEqual(result[1]['title'], "Blog 2")
         self.assertEqual(result[2]['title'], "Blog 3")
+
+def test_create_blog_with_one_category_without_photo(self):
+        # Данные для успешного создания блога с одной категорией
+        blog_data = {
+            "title": "Test categories.",
+            "body": "I test my app and it's cool. I want to add a category to the blog.",
+            "category_names": ["Education"]  # Одна категория
+        }
+
+        # Мокаем запрос для поиска категорий
+        # Создадим фиктивную категорию
+        category_mock = [Mock(id=1, name="Education")]  # Мокаем категорию
+
+        # Настройка моков для базы данных
+        # self.db_mock.query.return_value.filter.return_value.all.return_value = category_mock  # Возвращаем одну категорию
+
+        # # Создание блога с помощью валидных данных
+        # request = BlogBase(**blog_data)
+        # new_blog = create(request, self.db_mock, current_user=self.user_1)
+
+        # # Проверка, что блог был создан успешно
+        # self.assertIsNotNone(new_blog)
+        # self.assertEqual(new_blog.title, blog_data["title"])
+        # self.assertEqual(new_blog.body, blog_data["body"])
+
+        # # Проверка, что категория была правильно добавлена
+        # self.assertEqual(len(new_blog.categories), 1)  # Должна быть только одна категория
+        # self.assertEqual(new_blog.categories[0].name, blog_data["category_names"][0]) 

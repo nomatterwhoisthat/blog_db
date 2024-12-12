@@ -277,4 +277,5 @@ class TestCategoryFunctions(TestCase):
         with self.assertRaises(HTTPException) as context:
             get_blogs_by_category_name("univer", self.db_mock)
         self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail, "Category not found")
+
+

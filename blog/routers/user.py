@@ -11,7 +11,9 @@ router = APIRouter(
 )
 
 get_db = database.get_db
-
+#response_model=schemas.ShowUser: Указывает, что при успешном выполнении запроса сервер будет возвращать ответ, который будет соответствовать модели ShowUser из схем
+#Параметр request принимает данные, переданные в запросе в формате схемы User
+#db: Session = Depends(get_db): Эта зависимость подключает к методу объект сессии базы данных, получаемый через функцию get_db
 @router.post('/', response_model=schemas.ShowUser)
 def create_user(request: schemas.User,  db: Session = Depends(get_db)):
    return user.create(request, db)

@@ -3,10 +3,14 @@ from fastapi import APIRouter, Depends, status, UploadFile, File,HTTPException
 from .. import schemas, database, models, oauth2
 from sqlalchemy.orm import Session
 from ..repository import blog
-from ..rbac import check_admin
 from typing import Optional
-from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
+import os
+import uuid
+import logging
+
+IMAGEDIR = os.path.join(os.path.dirname(__file__), "images")
+
 router = APIRouter(
     prefix="/blog",
     tags=['Blogs']
@@ -14,18 +18,8 @@ router = APIRouter(
 
 get_db = database.get_db
 
-import os
-import uuid
-import logging
-
-IMAGEDIR = os.path.join(os.path.dirname(__file__), "images")
-
 @router.post("/upload-photo/", response_model=schemas.ShowPhoto)
-def upload_photo(
-    file: UploadFile = File(...),
-    db: Session = Depends(database.get_db),
-    current_user: schemas.User = Depends(oauth2.get_current_user)
-):
+def upload_photo(file: UploadFile = File(...),db: Session = Depends(database.get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     try:
         allowed_extensions = ["jpg", "jpeg", "png"]
         file_extension = file.filename.split(".")[-1].lower()
@@ -34,7 +28,7 @@ def upload_photo(
 
         # Генерация нового имени файла
         file.filename = f"{uuid.uuid4()}.{file_extension}"
-        contents = file.file.read()  # Синхронное чтение файла
+        contents = file.file.read()  #Открывается файл и его содержимое считывается в переменную contents
         
         # Проверка и создание директории, если её нет
         if not os.path.exists(IMAGEDIR):
@@ -43,7 +37,7 @@ def upload_photo(
 
         file_path = os.path.join(IMAGEDIR, file.filename)
         with open(file_path, "wb") as f:
-            f.write(contents)
+            f.write(contents)#файл записывается в указанную директорию
 
         logging.info(f"File saved to '{file_path}'")
         
@@ -95,8 +89,8 @@ def get_photo_by_id(photo_id: int, db: Session = Depends(get_db), current_user: 
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowBlog)
-def create(request: schemas.BlogBase2, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user), photo_id: int = None):  # Добавляем photo_id как необязательный параметр):
-    return blog.create(request, db, current_user, photo_id)
+def create(request: schemas.Blog, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):  # Добавляем photo_id как необязательный параметр):
+    return blog.create(request, db, current_user)
 
 @router.post("/{blog_id}/attach-photo/{photo_id}")
 def attach_photo_to_blog(blog_id: int, photo_id: int, db: Session = Depends(database.get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
@@ -183,7 +177,7 @@ def destroy(id: int, db: Session = Depends(get_db), current_user: schemas.User =
     
     # Проверяем, является ли пользователь владельцем блога или администратором
     if b.user_id != current_user.id and current_user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this blog.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions, must be admin or the owner of the blog.")
     
     # Удаляем блог, передавая только ID блога
     return blog.destroy(id, db)
