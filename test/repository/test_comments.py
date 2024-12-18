@@ -2,7 +2,6 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from fastapi.responses import JSONResponse
 from blog import models, schemas
 from blog.repository.comment import get_all_comments, create_comment, delete_comment
 import json
@@ -33,9 +32,12 @@ class TestCommentFunctions(TestCase):
         # Настраиваем запрос комментария
         request = schemas.Comment(content="Новый комментарий")
         
+        # Мокаем parent_comment как None, если не предусмотрена иерархия
+        parent_comment = None
+        
         # Вызываем функцию и проверяем результат
         with patch.object(db, 'add', return_value=None) as mock_add:
-            new_comment = create_comment(request, blog_id=1, user_id=1, db=db)
+            new_comment = create_comment(request, blog_id=1, user_id=1, db=db, parent_comment=parent_comment)
             mock_add.assert_called_once_with(new_comment)
             db.commit.assert_called_once()
             db.refresh.assert_called_once_with(new_comment)
@@ -47,8 +49,12 @@ class TestCommentFunctions(TestCase):
         
         # Пустое содержание комментария должно вызывать ошибку
         request = schemas.Comment(content="")
+        
+        # Мокаем parent_comment как None, если не предусмотрена иерархия
+        parent_comment = None
+        
         with self.assertRaises(HTTPException) as context:
-            create_comment(request, blog_id=1, user_id=1, db=db)
+            create_comment(request, blog_id=1, user_id=1, db=db, parent_comment=parent_comment)
         
         self.assertEqual(context.exception.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(context.exception.detail, "Comment content is required.")

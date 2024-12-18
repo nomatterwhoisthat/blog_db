@@ -75,7 +75,8 @@ def moderate_comment(
 @router.get("/comment/all", response_model=List[schemas.ShowComment])
 def get_all_comments_for_moderation(db: Session = Depends(database.get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     if current_user.role in ["moderator", "admin"]:
-        comments = db.query(models.Comment).all()  # Получить все комментарии
+        # comments = db.query(models.Comment).all() 
+        comments = db.query(models.Comment).filter(models.Comment.is_moderated == False).all()
         return comments
     else:
         raise HTTPException(

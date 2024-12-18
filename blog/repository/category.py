@@ -18,6 +18,7 @@ def create_category(request: schemas.Category, db: Session):
     db.commit()
     db.refresh(new_category)
     return new_category
+
 def get_blogs_by_category_names(category_names: List[str], db: Session):
     # Проверка: если категорий больше 5, выводим ошибку
     if len(category_names) > 5:
