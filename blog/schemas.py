@@ -1,5 +1,16 @@
-from pydantic import BaseModel, Field,  validator, ValidationError
+from pydantic import BaseModel, Field
 from typing import List, Optional
+from datetime import datetime
+
+class NotificationBase(BaseModel):
+    content: str = Field(..., max_length=500, description="Текст уведомления")
+
+class ShowNotification(NotificationBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
 
 class BlogBase(BaseModel):
     title: str = Field(..., max_length=255, description="Заголовок блога (макс. 255 символов)")

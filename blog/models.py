@@ -1,12 +1,29 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, DateTime
 from .database import Base
 from sqlalchemy.orm import relationship
+from datetime import datetime
 
 # Таблица для связи многие ко многим между блогами и категориями
 blog_category = Table('blog_category', Base.metadata,
     Column('blog_id', Integer, ForeignKey('blogs.id')),
     Column('category_id', Integer, ForeignKey('categories.id'))
 )
+
+class Notification(Base):
+    __tablename__ = 'notifications'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # Для кого уведомление
+    content = Column(String, nullable=False)  # Содержимое уведомления
+    created_at = Column(DateTime, default=datetime.utcnow)  # Время создания уведомления
+    comment_id = Column(Integer, ForeignKey('comments.id'), nullable=True)  # Внешний ключ на комментарий
+
+    user = relationship("User", back_populates="notifications")
+    
+    # Изменяем имя связи на 'related_comment', чтобы избежать конфликта
+    related_comment = relationship("Comment", back_populates="notifications", uselist=False, 
+                                   primaryjoin="Notification.comment_id == Comment.id")
+
 
 class Photo(Base):
     __tablename__ = 'photos'
@@ -31,6 +48,7 @@ class Blog(Base):
     comments = relationship("Comment", back_populates="blog", cascade="all, delete")
     categories = relationship("Category", secondary='blog_category', back_populates="blogs")
     photo = relationship("Photo", back_populates="blog")
+    
 
 
 
@@ -46,6 +64,7 @@ class User(Base):
     blogs = relationship("Blog", back_populates="creator")
     comments = relationship("Comment", back_populates="author", cascade="all, delete")
     photos = relationship("Photo", back_populates="user", cascade="all, delete")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete")
     
 class Comment(Base):
     __tablename__ = 'comments'
@@ -60,7 +79,7 @@ class Comment(Base):
     blog = relationship("Blog", back_populates="comments")
     author = relationship("User", back_populates="comments")
     parent = relationship("Comment", remote_side=[id], backref="replies")  # Связь с родительским комментарием
-
+    notifications = relationship("Notification", back_populates="related_comment", cascade="all, delete")  # Связь с уведомлениями
 
 class Category(Base):
     __tablename__ = 'categories'

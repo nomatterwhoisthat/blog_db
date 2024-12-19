@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from .. import schemas, database, oauth2, models
-from ..repository import comment
+from ..repository import comment, notification
 from typing import List
 from ..rbac import check_admin
+from fastapi.responses import JSONResponse
 
 router = APIRouter(
     prefix="/comment",
@@ -20,7 +21,11 @@ def create_comment(blog_id: int, request: schemas.Comment, db: Session = Depends
         if not parent_comment:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent comment not found.")
 
-    return comment.create_comment(request, blog_id, current_user.id, parent_comment, db)
+    new_comment = comment.create_comment(request, blog_id, current_user.id, parent_comment, db)
+    
+    return {"message": "Comment created successfully.","comment": new_comment }
+
+
 
 @router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_comment(comment_id: int,  db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
@@ -31,16 +36,19 @@ def delete_comment(comment_id: int,  db: Session = Depends(get_db), current_user
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found.")
 
     # Проверяем права пользователя
-    if current_user.role == "moderator":
+    if current_user.role in ["moderator", "admin"]:
         # Если модератор, просто удаляем комментарий
-        return comment.delete_comment(comment_id, db)  # Успешное удаление
+        return comment.delete_comment(comment_id, db, current_user)
+     
 
     # Если пользователь не владелец комментария, проверяем, является ли он администратором
     if comment_to_delete.user_id != current_user.id:
         check_admin(current_user)  # Проверяем, является ли текущий пользователь администратором
     
     # Удаляем комментарий
-    return comment.delete_comment(comment_id, db)
+    return comment.delete_comment(comment_id, db, current_user)
+    
+
 @router.put('/{comment_id}/moderate', status_code=status.HTTP_200_OK)
 def moderate_comment(
     comment_id: int, 
@@ -69,6 +77,10 @@ def moderate_comment(
     # Модерируем комментарий
     comment.is_moderated = True
     db.commit()
+    
+    if current_user.role in ["admin", "moderator"]:
+        content = f"Your comment on the blog '{comment.blog.title}' has been moderated and posted."
+        notification.create_notification(comment.user_id, content, db)
     return {"detail": "Comment moderated successfully."}
 
 
@@ -127,7 +139,3 @@ def get_comments(blog_id: int, db: Session = Depends(get_db), current_user: sche
         return tree
 
     return build_comment_tree(comments)
-
-
-
-

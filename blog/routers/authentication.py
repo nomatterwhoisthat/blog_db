@@ -22,3 +22,4 @@ def login(request:OAuth2PasswordRequestForm = Depends(), db: Session = Depends(d
     #при валидных данных входа создаётся токен, куда передаём id как часть данных
     access_token = token.create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
+#Это будет основная информация, которая будет использоваться для идентификации пользователя в будущем.

@@ -1,7 +1,7 @@
 from fastapi import FastAPI #основной класс для создания веб-приложения
 from . import models
 from .database import engine #Объект SQLAlchemy, управляющий соединением с базой данных
-from .routers import blog, user, authentication, comment, category
+from .routers import blog, user, authentication, comment, category, notification
 from fastapi.responses import JSONResponse
 from fastapi import status
 from fastapi.exceptions import RequestValidationError
@@ -25,3 +25,4 @@ app.include_router(blog.router)
 app.include_router(user.router)
 app.include_router(comment.router)
 app.include_router(category.router)
+app.include_router(notification.router)
