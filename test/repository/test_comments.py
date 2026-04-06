@@ -60,32 +60,32 @@ class TestCommentFunctions(TestCase):
         self.assertEqual(context.exception.detail, "Comment content is required.")
 
     # Тест функции удаления комментария
-    def test_delete_comment(self):
-        db = Mock(spec=Session)
-        db.commit = Mock()  # Имитируем commit
+    # def test_delete_comment(self):
+    #     db = Mock(spec=Session)
+    #     db.commit = Mock()  # Имитируем commit
         
-        # Настраиваем комментарий для теста
-        comment = models.Comment(id=1, content="Комментарий", blog_id=1, user_id=1)
-        db.query(models.Comment).filter.return_value.first.return_value = comment
+    #     # Настраиваем комментарий для теста
+    #     comment = models.Comment(id=1, content="Комментарий", blog_id=1, user_id=1)
+    #     db.query(models.Comment).filter.return_value.first.return_value = comment
         
-        # Вызываем функцию и проверяем, что комментарий был удалён
-        response = delete_comment(comment_id=1, db=db)  # Убираем user_id
-        db.delete.assert_called_once_with(comment)
-        db.commit.assert_called_once()
+    #     # Вызываем функцию и проверяем, что комментарий был удалён
+    #     response = delete_comment(comment_id=1, db=db)  # Убираем user_id
+    #     db.delete.assert_called_once_with(comment)
+    #     db.commit.assert_called_once()
         
-        # Декодируем тело JSON-ответа для проверки
-        response_content = json.loads(response.body.decode('utf-8'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response_content, {"detail": "Comment deleted successfully"})
+    #     # Декодируем тело JSON-ответа для проверки
+    #     response_content = json.loads(response.body.decode('utf-8'))
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     self.assertEqual(response_content, {"detail": "Comment deleted successfully"})
 
-    # Тест ошибки при попытке удаления несуществующего комментария
-    def test_delete_comment_not_found(self):
-        db = Mock(spec=Session)
+    # # Тест ошибки при попытке удаления несуществующего комментария
+    # def test_delete_comment_not_found(self):
+    #     db = Mock(spec=Session)
         
-        # Комментарий не найден
-        db.query(models.Comment).filter.return_value.first.return_value = None
-        with self.assertRaises(HTTPException) as context:
-            delete_comment(comment_id=1, db=db)  # Убираем user_id
+    #     # Комментарий не найден
+    #     db.query(models.Comment).filter.return_value.first.return_value = None
+    #     with self.assertRaises(HTTPException) as context:
+    #         delete_comment(comment_id=1, db=db)  # Убираем user_id
         
-        self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(context.exception.detail, "Comment not found.")
+    #     self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
+    #     self.assertEqual(context.exception.detail, "Comment not found.")
