@@ -7,7 +7,7 @@ class NotificationBase(BaseModel):
 
 class ShowNotification(NotificationBase):
     id: int
-    created_at: datetime
+    # created_at: datetime
 
     class Config:
         orm_mode = True
