@@ -1,0 +1,39 @@
+stages:
+  - test
+  - build
+  - push
+
+variables:
+  IMAGE_NAME: "nurjemal2003/blog-app"
+
+test:
+  stage: test
+  image: python:3.12
+  script:
+    - pip install -r requirements.txt
+    - PYTHONPATH=. pytest
+
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker build -t $IMAGE_NAME:latest .
+
+push:
+  stage: push
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker push $IMAGE_NAME:latest
+  only:
+    - main
